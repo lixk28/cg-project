@@ -15,10 +15,10 @@ TARGET := ./demo
 all: $(TARGET)
 
 $(TARGET): $(OBJ)
-	$(CXX) $^ -o $(TARGET) -lglfw -lGLEW -lGL -lGLU -lm
+	$(CXX) $^ -o $(TARGET) -lglfw -lGLEW -lGL -lGLU -lm -lassimp
 
 $(OBJ): $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
-	$(CXX) $(CXXFLAGS) -I$(INC_DIR) -c $^ -o $@ 
+	$(CXX) $(CXXFLAGS) -I$(INC_DIR) -c $< -o $@
 
 .PHONY: test
 test:
