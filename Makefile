@@ -20,6 +20,10 @@ $(TARGET): $(OBJ)
 $(OBJ): $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
 	$(CXX) $(CXXFLAGS) -I$(INC_DIR) -c $^ -o $@ 
 
+.PHONY: test
+test:
+	$(TARGET)
+
 .PHONY: clean
 clean:
 	rm -f $(OBJ_DIR)/*.o $(TARGET)
