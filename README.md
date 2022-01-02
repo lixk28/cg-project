@@ -7,6 +7,7 @@ sudo apt install build-essential
 sudo apt install libglfw3 libglfw3-dev
 sudo apt install libglew2.1 libglew-dev
 sudo apt install libglm-dev
+sudo apt install libassimp5 libassimp-dev
 ```
 
 ## 使用方法
