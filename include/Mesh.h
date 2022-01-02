@@ -39,6 +39,16 @@ struct Texture
   string path;
 };
 
+struct Material
+{
+  //材质颜色光照
+  glm::vec4 Ka;
+  //漫反射
+  glm::vec4 Kd;
+  //镜面反射
+  glm::vec4 Ks;
+};
+
 class Mesh
 {
 public:
@@ -47,9 +57,11 @@ public:
   vector<unsigned int> indices;
   vector<Texture> textures;
   unsigned int VAO;
+  Material mats;
+  unsigned int uniformBlockIndex;
 
   // constructor
-  Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures);
+  Mesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures, Material mat);
 
   // render the mesh
   void Draw(Shader &shader);

@@ -1,6 +1,8 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
+#include <math.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -8,6 +10,7 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "Model.h"
+#include "SkyBox.h"
 
 #include <iostream>
 
@@ -19,11 +22,11 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 
 // settings
-const unsigned int SCR_WIDTH = 1024;
-const unsigned int SCR_HEIGHT = 768;
+const unsigned int SCR_WIDTH = 1920;
+const unsigned int SCR_HEIGHT = 1080;
 
 // camera
-Camera camera(glm::vec3(0.0f, 3.0f, -1.0f));
+Camera camera(glm::vec3(0.0f, 50.0f, 10.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -32,11 +35,79 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-glm::vec3 modelPositions[]=
-{
-  glm::vec3(0.0f, 0.0f, 0.0f),
-  glm::vec3(0.0f, 1.0f, 0.0f)
+glm::vec3 modelPositions[] =
+    {
+        glm::vec3(0.0f, 20.0f, 0.0f),
+        glm::vec3(0.0f, 0.0f, 8.0f),
+        glm::vec3(8.0f, 0.0f, 0.0f),
+        glm::vec3(20.0f, 0.0f, 0.0f),
 };
+
+glm::vec3 lightPos(0.0f, 10.0f, 0.0f);
+
+GLfloat skyBoxVertex[] = {
+    -100.0f, 100.0f, -100.0f,
+    -100.0f, -100.0f, -100.0f,
+    100.0f, -100.0f, -100.0f,
+    100.0f, -100.0f, -100.0f,
+    100.0f, 100.0f, -100.0f,
+    -100.0f, 100.0f, -100.0f,
+
+    -100.0f, -100.0f, 100.0f,
+    -100.0f, -100.0f, -100.0f,
+    -100.0f, 100.0f, -100.0f,
+    -100.0f, 100.0f, -100.0f,
+    -100.0f, 100.0f, 100.0f,
+    -100.0f, -100.0f, 100.0f,
+
+    100.0f, -100.0f, -100.0f,
+    100.0f, -100.0f, 100.0f,
+    100.0f, 100.0f, 100.0f,
+    100.0f, 100.0f, 100.0f,
+    100.0f, 100.0f, -100.0f,
+    100.0f, -100.0f, -100.0f,
+
+    -100.0f, -100.0f, 100.0f,
+    -100.0f, 100.0f, 100.0f,
+    100.0f, 100.0f, 100.0f,
+    100.0f, 100.0f, 100.0f,
+    100.0f, -100.0f, 100.0f,
+    -100.0f, -100.0f, 100.0f,
+
+    -100.0f, 100.0f, -100.0f,
+    100.0f, 100.0f, -100.0f,
+    100.0f, 100.0f, 100.0f,
+    100.0f, 100.0f, 100.0f,
+    -100.0f, 100.0f, 100.0f,
+    -100.0f, 100.0f, -100.0f,
+
+    -100.0f, -100.0f, -100.0f,
+    -100.0f, -100.0f, 100.0f,
+    100.0f, -100.0f, -100.0f,
+    100.0f, -100.0f, -100.0f,
+    -100.0f, -100.0f, 100.0f,
+    100.0f, -100.0f, 100.0f};
+
+glm::vec3 mul_vec3(int n, glm::vec3 vec)
+{
+  glm::vec3 sum(0.0f, 0.0f, 0.0f);
+  for (int i = 0; i < n; i++)
+  {
+    sum += vec;
+  }
+  return sum;
+}
+
+//两向量夹角
+float getAngle(glm::vec3 a, glm::vec3 b)
+{
+  float dot = 0, a_len = 0, b_len = 0;
+  dot = a.x * b.x + a.y * b.y + a.z * b.z;
+  a_len = a.x * a.x + a.y * a.y + a.z * a.z;
+  b_len = b.x * b.x + b.y * b.y + b.z * b.z;
+  float cos_angle = dot / (sqrt(a_len) * sqrt(b_len));
+  return acosf(cos_angle);
+}
 
 int main()
 {
@@ -80,23 +151,48 @@ int main()
   // -----------------------------
   glEnable(GL_DEPTH_TEST);
 
+  glViewport(0, 0, SCR_WIDTH, SCR_HEIGHT);
+
   // build and compile shaders
   // -------------------------
-  Shader ourShader("shader/model_loading.vs", "shader/model_loading.fs");
+  Shader robotShader("shader/robot.vs", "shader/robot.fs");
+  Shader skyShader("shader/skybox.vs", "shader/skybox.fs");
+  Shader graphShader("shader/graph.vs", "shader/graph.fs");
+  Shader houseShader("shader/graph.vs", "shader/graph.fs");
 
   // load models
   // -----------
-  Model ourModel("resource/nanosuit/nanosuit.obj");
-
-  Model chairModel("resource/chair/chair.obj");
-
-  // Model ironManModel("resource/ironman/IronMan.obj");
+  Model robotModel("resource/ironman/IronMan.obj");
+  Model houseModel("resource/house/house.obj");
+  Model cityModel("resource/city/casa.obj");
+  Model jeniModel("resource/jeni/BR_Squirtle.obj");
 
   // draw in wireframe
   //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
   // render loop
   // -----------
+
+  //  天空盒
+  GLuint skyBoxVAO, skyBoxVBO;
+  glGenVertexArrays(1, &skyBoxVAO);
+  glGenBuffers(1, &skyBoxVBO);
+  glBindVertexArray(skyBoxVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, skyBoxVBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(skyBoxVertex), skyBoxVertex, GL_STATIC_DRAW);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0);
+  glEnableVertexAttribArray(0);
+  glBindVertexArray(0);
+
+  vector<const GLchar *> faces;
+  faces.push_back("resource/skybox/CloudyCrown_Midnight_Right.png");
+  faces.push_back("resource/skybox/CloudyCrown_Midnight_Left.png");
+  faces.push_back("resource/skybox/CloudyCrown_Midnight_Up.png");
+  faces.push_back("resource/skybox/CloudyCrown_Midnight_Down.png");
+  faces.push_back("resource/skybox/CloudyCrown_Midnight_Back.png");
+  faces.push_back("resource/skybox/CloudyCrown_Midnight_Front.png");
+  GLuint skyBoxTexture = loadCubeMap(faces);
+
   while (!glfwWindowShouldClose(window))
   {
     // per-frame time logic
@@ -111,39 +207,79 @@ int main()
 
     // render
     // ------
-    glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+    glClearColor(0.12f, 0.63f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    glDepthMask(GL_FALSE);
+    glDepthFunc(GL_LEQUAL);
+
+    skyShader.use();
+    glm::mat4 model0(1.0f);
+    model0 = glm::translate(model0, glm::vec3(0.0, 50, 0.0));
+    glm::mat4 projection1 = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 500.0f);
+    glm::mat4 view1 = camera.GetViewMatrix();
+    skyShader.setMat4("model", model0);
+    skyShader.setMat4("projection", projection1);
+    skyShader.setMat4("view", view1);
+
+    glBindVertexArray(skyBoxVAO);
+    glActiveTexture(GL_TEXTURE0);
+    skyShader.setInt("skyBox", 0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skyBoxTexture);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glBindVertexArray(0);
+    glDepthMask(GL_TRUE);
+
     // don't forget to enable shader before setting uniforms
-    ourShader.use();
+    robotShader.use();
+
+    robotShader.setVec3("light.position", lightPos);
+    robotShader.setVec3("viewPos", camera.Position);
+
+    //light properties
+    robotShader.setVec3("light.ambient", 1.0f, 1.0f, 1.0f);
+    robotShader.setVec3("light.diffuse", 1.0f, 1.0f, 1.0f);
+    robotShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
 
     // view/projection transformations
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    ourShader.setVec3("cameraPostion", camera.Position);
     glm::mat4 view = camera.GetViewMatrix();
-    ourShader.setMat4("projection", projection);
-    ourShader.setMat4("view", view);
+    robotShader.setMat4("projection", projection);
+    robotShader.setMat4("view", view);
 
     // render the loaded model
     glm::mat4 model1 = glm::mat4(1.0f);
-    model1 = glm::translate(model1, modelPositions[0]); // translate it down so it's at the center of the scene
-    
-    // model1 = glm::rotate(model1, theta, camera.Up);
-    model1 = glm::scale(model1, glm::vec3(0.1f, 0.1f, 0.1f));     // it's a bit too big for our scene, so scale it down
-    ourShader.setMat4("model", model1);
-    ourModel.Draw(ourShader);
+    model1 = glm::translate(model1, modelPositions[0]);          // translate it down so it's at the center of the scene
+    model1 = glm::scale(model1, glm::vec3(0.01f, 0.01f, 0.01f)); // it's a bit too big for our scene, so scale it down
+    robotShader.setMat4("model", model1);
+    // robotModel.Draw(robotShader);
 
     glm::mat4 model2 = glm::mat4(1.0f);
-    model2 = glm::translate(model2, modelPositions[1]); // translate it down so it's at the center of the scene
-    model2 = glm::scale(model2, glm::vec3(0.1f, 0.1f, 0.1f));     // it's a bit too big for our scene, so scale it down
-    ourShader.setMat4("model", model2);
-    ourModel.Draw(ourShader);
+    model2 = glm::translate(model2, modelPositions[0]); // translate it down so it's at the center of the scene
+    model2 = glm::scale(model2, glm::vec3(0.35f, 0.35f, 0.35f));
+    // model2 = glm::rotate(model2, 30.0f, glm::vec3(-1.0f, 0.0f, 0.0f));
+    // angle
+    float angle = getAngle(camera.Front, glm::vec3(0.0f, 1.0f, 0.0f));
+    model2 = glm::rotate(model2, angle, glm::cross(glm::vec3(0.0f, 1.0f, 0.0f),camera.Front));
+    graphShader.use(); // it's a bit too big for our scene, so scale it down
+    graphShader.setMat4("model", model2);
+    graphShader.setMat4("projection", projection);
+    graphShader.setMat4("view", view);
+    graphShader.setVec3("light.position", lightPos);
+    graphShader.setVec3("viewPos", camera.Position);
 
-    glm::mat4 chair_model = glm::mat4(1.0f);
-    chair_model = glm::translate(chair_model, glm::vec3(0.0f, 2.0f, 1.0f));
-    chair_model = glm::scale(chair_model, glm::vec3(0.01f, 0.01f, 0.01f));
-    ourShader.setMat4("model", chair_model);
-    chairModel.Draw(ourShader);
+    //light properties
+    graphShader.setVec3("light.ambient", 1.0f, 1.0f, 1.0f);
+    graphShader.setVec3("light.diffuse", 1.0f, 1.0f, 1.0f);
+    graphShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+    jeniModel.Draw(graphShader);
+
+    robotShader.use();
+    glm::mat4 model4 = glm::mat4(1.0f);
+    model4 = glm::translate(model4, modelPositions[2]);
+    model4 = glm::scale(model4, glm::vec3(10.0f, 10.0f, 10.0f));
+    robotShader.setMat4("model", model4);
+    cityModel.Draw(robotShader);
 
     // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
     // -------------------------------------------------------------------------------
@@ -173,7 +309,7 @@ void processInput(GLFWwindow *window)
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     camera.ProcessKeyboard(RIGHT, deltaTime);
 
-  modelPositions[0] = camera.Position + camera.Front + camera.Front + camera.Front + camera.Front - camera.Up;
+  modelPositions[0] = camera.Position + mul_vec3(10, camera.Front) - camera.Up;
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

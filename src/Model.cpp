@@ -106,14 +106,19 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
   }
   // process materials
   aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
-  // we assume a convention for sampler names in the shaders. Each diffuse texture should be named
-  // as 'texture_diffuseN' where N is a sequential number ranging from 1 to MAX_SAMPLER_NUMBER.
-  // Same applies to other texture as the following list summarizes:
-  // diffuse: texture_diffuseN
-  // specular: texture_specularN
-  // normal: texture_normalN
+  Material mat;
+  aiColor3D color;
+
+  //读取mtl文件顶点数据
+  material->Get(AI_MATKEY_COLOR_AMBIENT, color);
+  mat.Ka = glm::vec4(color.r, color.g, color.b, 1.0);
+  material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+  mat.Kd = glm::vec4(color.r, color.g, color.b, 1.0);
+  material->Get(AI_MATKEY_COLOR_SPECULAR, color);
+  mat.Ks = glm::vec4(color.r, color.g, color.b, 1.0);
 
   // 1. diffuse maps
+
   vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
   textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
   // 2. specular maps
@@ -127,7 +132,7 @@ Mesh Model::processMesh(aiMesh *mesh, const aiScene *scene)
   textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
   // return a mesh object created from the extracted mesh data
-  return Mesh(vertices, indices, textures);
+  return Mesh(vertices, indices, textures, mat);
 }
 
 vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName)
