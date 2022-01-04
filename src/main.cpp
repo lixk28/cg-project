@@ -22,8 +22,8 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 
 // settings
-const unsigned int SCR_WIDTH = 1920;
-const unsigned int SCR_HEIGHT = 1080;
+const unsigned int SCR_WIDTH = 2560;
+const unsigned int SCR_HEIGHT = 1440;
 
 // camera
 Camera camera(glm::vec3(0.0f, 50.0f, 10.0f));
@@ -108,6 +108,13 @@ float getAngle(glm::vec3 a, glm::vec3 b)
   float cos_angle = dot / (sqrt(a_len) * sqrt(b_len));
   return acosf(cos_angle);
 }
+
+glm::vec3 pointLightPositions[] = {
+        glm::vec3( 7,  2,  20),
+        glm::vec3( 2.3, -3.3, 4.0),
+        glm::vec3(4,  2, -12),
+        glm::vec3( 22,  -7, 86.69)
+    };
 
 int main()
 {
@@ -233,13 +240,53 @@ int main()
     // don't forget to enable shader before setting uniforms
     robotShader.use();
 
-    robotShader.setVec3("light.position", lightPos);
-    robotShader.setVec3("viewPos", camera.Position);
-
-    //light properties
-    robotShader.setVec3("light.ambient", 1.0f, 1.0f, 1.0f);
-    robotShader.setVec3("light.diffuse", 1.0f, 1.0f, 1.0f);
-    robotShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f);
+    robotShader.setVec3("dirLight.direction", 0.2f, -1.0f, 0.3f);
+    robotShader.setVec3("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+    robotShader.setVec3("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+    robotShader.setVec3("dirLight.specular", 0.5f, 0.5f, 0.5f);
+    // point light 1
+    robotShader.setVec3("pointLights[0].position", pointLightPositions[0]);
+    robotShader.setVec3("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
+    robotShader.setVec3("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
+    robotShader.setVec3("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+    robotShader.setFloat("pointLights[0].constant", 1.0f);
+    robotShader.setFloat("pointLights[0].linear", 0.09);
+    robotShader.setFloat("pointLights[0].quadratic", 0.032);
+    // point light 2
+    robotShader.setVec3("pointLights[1].position", pointLightPositions[1]);
+    robotShader.setVec3("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
+    robotShader.setVec3("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
+    robotShader.setVec3("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
+    robotShader.setFloat("pointLights[1].constant", 1.0f);
+    robotShader.setFloat("pointLights[1].linear", 0.09);
+    robotShader.setFloat("pointLights[1].quadratic", 0.032);
+    // point light 3
+    robotShader.setVec3("pointLights[2].position", pointLightPositions[2]);
+    robotShader.setVec3("pointLights[2].ambient", 0.05f, 0.05f, 0.05f);
+    robotShader.setVec3("pointLights[2].diffuse", 0.8f, 0.8f, 0.8f);
+    robotShader.setVec3("pointLights[2].specular", 1.0f, 1.0f, 1.0f);
+    robotShader.setFloat("pointLights[2].constant", 1.0f);
+    robotShader.setFloat("pointLights[2].linear", 0.09);
+    robotShader.setFloat("pointLights[2].quadratic", 0.032);
+    // point light 4
+    robotShader.setVec3("pointLights[3].position", pointLightPositions[3]);
+    robotShader.setVec3("pointLights[3].ambient", 0.05f, 0.05f, 0.05f);
+    robotShader.setVec3("pointLights[3].diffuse", 0.8f, 0.8f, 0.8f);
+    robotShader.setVec3("pointLights[3].specular", 1.0f, 1.0f, 1.0f);
+    robotShader.setFloat("pointLights[3].constant", 1.0f);
+    robotShader.setFloat("pointLights[3].linear", 0.09);
+    robotShader.setFloat("pointLights[3].quadratic", 0.032);
+    // spotLight
+    robotShader.setVec3("spotLight.position", camera.Position);
+    robotShader.setVec3("spotLight.direction", camera.Front);
+    robotShader.setVec3("spotLight.ambient", 0.0f, 0.0f, 0.0f);
+    robotShader.setVec3("spotLight.diffuse", 1.0f, 1.0f, 1.0f);
+    robotShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
+    robotShader.setFloat("spotLight.constant", 1.0f);
+    robotShader.setFloat("spotLight.linear", 0.09);
+    robotShader.setFloat("spotLight.quadratic", 0.032);
+    robotShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+    robotShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(15.0f)));
 
     // view/projection transformations
     glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
@@ -254,7 +301,7 @@ int main()
     robotShader.setMat4("model", model1);
     // robotModel.Draw(robotShader);
 
-    glm::mat4 model2 = glm::mat4(1.0f);
+    /*glm::mat4 model2 = glm::mat4(1.0f);
     model2 = glm::translate(model2, modelPositions[0]); // translate it down so it's at the center of the scene
     model2 = glm::scale(model2, glm::vec3(0.35f, 0.35f, 0.35f));
     // model2 = glm::rotate(model2, 30.0f, glm::vec3(-1.0f, 0.0f, 0.0f));
@@ -262,6 +309,22 @@ int main()
     float angle = getAngle(camera.Front, glm::vec3(0.0f, 1.0f, 0.0f));
     model2 = glm::rotate(model2, angle, glm::cross(glm::vec3(0.0f, 1.0f, 0.0f),camera.Front));
     graphShader.use(); // it's a bit too big for our scene, so scale it down
+    graphShader.setMat4("model", model2);
+    graphShader.setMat4("projection", projection);
+    graphShader.setMat4("view", view);
+    graphShader.setVec3("light.position", lightPos);
+    graphShader.setVec3("viewPos", camera.Position);*/
+
+    glm::mat4 model2 = glm::mat4(1.0f);
+    model2 = glm::translate(model2, modelPositions[0]);  // translate it down so it's at the center of the scene
+    model2 = glm::scale(model2, glm::vec3(0.35f, 0.35f, 0.35f));
+    // model2 = glm::rotate(model2, 30.0f, glm::vec3(-1.0f, 0.0f, 0.0f));
+    // angle
+    model2 = glm::rotate(model2, glm::radians(camera.Yaw + 90.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+    model2 = glm::rotate(model2, glm::radians(camera.Pitch), glm::vec3(1.0f, 0.0f, 0.0f));
+    model2 = glm::rotate(model2, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    model2 = glm::rotate(model2, glm::radians(90.0f), glm::vec3(-1.0f, 0.0f, 0.0f));
+    graphShader.use();  // it's a bit too big for our scene, so scale it down
     graphShader.setMat4("model", model2);
     graphShader.setMat4("projection", projection);
     graphShader.setMat4("view", view);
@@ -276,7 +339,7 @@ int main()
 
     robotShader.use();
     glm::mat4 model4 = glm::mat4(1.0f);
-    model4 = glm::translate(model4, modelPositions[2]);
+    model4 = glm::translate(model4, modelPositions[1]);
     model4 = glm::scale(model4, glm::vec3(10.0f, 10.0f, 10.0f));
     robotShader.setMat4("model", model4);
     cityModel.Draw(robotShader);
