@@ -1,4 +1,10 @@
+# 杰尼龟的奇妙之旅
+
+![](gallery/cg_demo.gif)
+
 ## 环境配置
+
+开发和测试环境为 Ubuntu 20.04.3 LTS x86_64，其他操作系统并未做测试。
 
 下载安装下面的库和头文件。
 
@@ -70,3 +76,12 @@ make
 make test
 ```
 
+清理目标文件和可执行文件：
+
+```shell
+make clean
+```
+
+## 参考资料
+
+- https://learnopengl.com/
