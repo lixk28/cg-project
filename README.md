@@ -1,4 +1,4 @@
-# 杰尼龟的奇妙之旅
+# 杰尼龟的<s>奇妙之旅</s> Horror Palace
 
 ![](gallery/cg_demo.gif)
 
